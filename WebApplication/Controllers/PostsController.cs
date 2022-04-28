@@ -3,27 +3,34 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using WebApplication.Data;
 using WebApplication.Models;
+using WebApplication.ViewModels;
 
 namespace WebApplication.Controllers
 {
+    [Authorize]
     public class PostsController : Controller
     {
         private readonly ApplicationDbContext _context;
+        public UserManager<ApplicationUser> _userManager;
 
-        public PostsController(ApplicationDbContext context)
+        public PostsController(UserManager<ApplicationUser> userManager , ApplicationDbContext context)
         {
             _context = context;
+            _userManager = userManager;    
         }
 
         // GET: Posts
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(int? pageNumber)
         {
-            return View(await _context.Post.ToListAsync());
+            var post = _context.Post.Include(x => x.Author);
+            int pageSize = 3;
+            return View(await PaginatedList<Post>.CreateAsync(post.AsNoTracking(), pageNumber ?? 1, pageSize));
         }
 
         // GET: Posts/Details/5
@@ -35,7 +42,7 @@ namespace WebApplication.Controllers
                 return NotFound();
             }
 
-            var post = await _context.Post.Include(z=>z.Author).Include(x=>x.PostCategories).ThenInclude(y=>y.Category)
+            var post = await _context.Post.Include(z=>z.Author).Include(a=>a.PostTags).ThenInclude(b=>b.Tags).Include(x=>x.PostCategories).ThenInclude(y=>y.Category)
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (post == null)
             {
@@ -48,7 +55,23 @@ namespace WebApplication.Controllers
         // GET: Posts/Create
         public IActionResult Create()
         {
-            return View();
+            var CategoryList = _context.Category.ToList();
+            var TagsList = _context.Tags.ToList();
+
+
+
+            CreatePostViewModel vm = new CreatePostViewModel();
+            vm.Categories = CategoryList.Select(x => new SelectListItem()
+            {
+                Text = x.Title,
+                Value = x.Id.ToString()
+            }).ToList();
+            vm.PostTags = TagsList.Select(x => new SelectListItem()
+            {
+                Text = x.Title,
+                Value = x.Id.ToString()
+            }).ToList();
+            return View(vm);
         }
 
         // POST: Posts/Create
@@ -56,15 +79,43 @@ namespace WebApplication.Controllers
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Title,Description,PublishedDate,ApplicationUserId")] Post post)
+        public async Task<IActionResult> Create(CreatePostViewModel vm)
         {
+            var selectedCategory = vm.Categories.Where(x => x.Selected).Select(x => x.Value).Select(int.Parse).ToList();
+            var selectedTags = vm.PostTags.Where(x => x.Selected).Select(x => x.Value).Select(int.Parse).ToList();
+
             if (ModelState.IsValid)
             {
+                var post = new Post
+                {
+                    Title = vm.Title,
+                    Description = vm.Description,
+                    PublishedDate = vm.PublishedDate,
+                    ApplicationUserId = _userManager.GetUserId(HttpContext.User)
+
+                };
+                foreach (var item in selectedCategory)
+                {
+                    post.PostCategories.Add(new PostCategory()
+                    {
+                        Post = post,
+                        CategoryId = item
+                    });
+                }
+                foreach (var item in selectedTags)
+                {
+                    post.PostTags.Add(new PostTags()
+                    {
+                        Post = post,
+                        TagsId = item
+                    });
+                }
+
                 _context.Add(post);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            return View(post);
+            return RedirectToAction("Index");
         }
 
         // GET: Posts/Edit/5

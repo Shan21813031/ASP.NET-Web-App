@@ -1,11 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using WebApplication.Data;
 using WebApplication.Models;
 
 namespace WebApplication.Areas.Identity.Pages.Account.Manage
@@ -14,16 +18,24 @@ namespace WebApplication.Areas.Identity.Pages.Account.Manage
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly ApplicationDbContext _context;
+        private IWebHostEnvironment _hostingEnvironment;
 
         public IndexModel(
             UserManager<ApplicationUser> userManager,
-            SignInManager<ApplicationUser> signInManager)
+            SignInManager<ApplicationUser> signInManager,
+            ApplicationDbContext context,
+            IWebHostEnvironment hostingEnvironment)
         {
             _userManager = userManager;
             _signInManager = signInManager;
+            _context = context;
+            _hostingEnvironment = hostingEnvironment;
         }
 
         public string Username { get; set; }
+
+        public IFormFile PictureURL { get; set; }
 
         [TempData]
         public string StatusMessage { get; set; }
@@ -36,6 +48,8 @@ namespace WebApplication.Areas.Identity.Pages.Account.Manage
             [Phone]
             [Display(Name = "Phone number")]
             public string PhoneNumber { get; set; }
+            public IFormFile PictureURL { get; set; }
+
         }
 
         private async Task LoadAsync(ApplicationUser user)
@@ -88,9 +102,29 @@ namespace WebApplication.Areas.Identity.Pages.Account.Manage
                 }
             }
 
+            user.AuthorProfilePic = UploadPicture(Input.PictureURL);
+            _context.Users.Update(user);
+            _context.SaveChanges();
+
             await _signInManager.RefreshSignInAsync(user);
             StatusMessage = "Your profile has been updated";
             return RedirectToPage();
+        }
+
+        private string UploadPicture(IFormFile pictureURL)
+        {
+            string fileName = null;
+            if (pictureURL != null)
+            {
+                string uploadDir = Path.Combine(_hostingEnvironment.WebRootPath, "Images");
+                fileName = Guid.NewGuid().ToString() + "-" + pictureURL.FileName;
+                string filePath = Path.Combine(uploadDir, fileName);
+                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                {
+                    pictureURL.CopyTo(fileStream);
+                }
+            }
+            return fileName;
         }
     }
 }

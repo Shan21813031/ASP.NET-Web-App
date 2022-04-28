@@ -4,5 +4,6 @@ namespace WebApplication.Models
 {
     public class ApplicationUser : IdentityUser
     {
+        public string AuthorProfilePic { get; set; }   
     }
 }

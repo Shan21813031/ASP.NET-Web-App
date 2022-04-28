@@ -36,6 +36,24 @@
         </dd>
     </dl>
 </div>
+<div class="form-group">
+    <h3>Post Categories</h3>
+    @foreach (var item in Model.PostCategories)
+    {
+        <span>
+            @item.Category.Title
+        </span>
+    }
+</div>
+<div class="form-group">
+    <h3>Post Tags</h3>
+    @foreach (var item in Model.PostTags)
+    {
+        <span>
+            @item.Tags.Title
+        </span>
+    }
+</div>
 <div>
     <a asp-action="Edit" asp-route-id="@Model.Id">Edit</a> |
     <a asp-action="Index">Back to List</a>

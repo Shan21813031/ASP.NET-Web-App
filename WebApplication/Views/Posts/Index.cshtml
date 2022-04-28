@@ -1,7 +1,7 @@
-﻿@model IEnumerable<WebApplication.Models.Post>
+﻿@model PaginatedList<WebApplication.Models.Post>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Adverts";
 }
 
 <h1>Index</h1>
@@ -13,16 +13,16 @@
     <thead>
         <tr>
             <th>
-                @Html.DisplayNameFor(model => model.Title)
+                Title
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Description)
+                URL and Description
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.PublishedDate)
+                Published
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.ApplicationUserId)
+                Profile Picture
             </th>
             <th></th>
         </tr>
@@ -40,7 +40,9 @@
                 @Html.DisplayFor(modelItem => item.PublishedDate)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.ApplicationUserId)
+                @if (item.Author!=null){
+                    <img src="~/Images/@item.Author.AuthorProfilePic" width="40" height="40"/>
+                }
             </td>
             <td>
                 <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
@@ -51,3 +53,22 @@
 }
     </tbody>
 </table>
+
+@{
+
+    var prevDisabled =!Model.HasPreviousPage ? "disabled" : "";
+    var nextDisabled = !Model.HasNextPage ? "disabled" : "";
+}
+
+<a asp-actions="Index"
+   asp-route-sortOrder="@ViewData["CurrentSort"]"
+   asp-route-pageNumber="@(Model.PageIndex - 1)"
+   asp-route-currentFilter="@ViewData["CurrentFilter"]"
+   class="btn btn-default @prevDisabled">Previous
+</a>
+<a asp-actions="Index"
+   asp-route-sortOrder="@ViewData["CurrentSort"]"
+   asp-route-pageNumber="@(Model.PageIndex + 1)"
+   asp-route-currentFilter="@ViewData["CurrentFilter"]"
+   class="btn btn-default @nextDisabled">Next
+</a>

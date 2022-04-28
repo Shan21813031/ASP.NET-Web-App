@@ -14,10 +14,25 @@ namespace WebApplication.Models
 
         public DateTime PublishedDate { get; set; }
 
-        public Guid ApplicationUserId { get; set; } 
+        public string ApplicationUserId { get; set; } 
+
+        public PostStatus StatusOfPost { get; set; }
+
+        public bool PostVisibility { get; set; }
 
         public ICollection<PostCategory> PostCategories { get; set; } = new HashSet<PostCategory>();   
 
         public ApplicationUser Author { get; set; }
+
+        public ICollection<PostTags> PostTags { get; set; } = new HashSet<PostTags>();
+    }
+
+    public enum PostStatus
+    {
+        Draft = 0,
+        Published = 1,
+        Scheduled = 2
+          
+
     }
 }
