@@ -19,7 +19,7 @@
             </div>
             <div class="form-group">
                 <label asp-for="Description" class="control-label"></label>
-                <input asp-for="Description" class="form-control" />
+                <textarea asp-for="Description" class="form-control" rows="3"></textarea>
                 <span asp-validation-for="Description" class="text-danger"></span>
             </div>
             <div class="form-group">
@@ -30,14 +30,14 @@
             <div class="form-group">
                 @for (int i = 0; i < Model.Categories.Count; i++)
                 {
-                    <input type="hidden" asp-for="Categories[i].Value"/>
+                    <input type="hidden" asp-for="@Model.Categories[i].Value"/>
                     <input asp-for="@Model.Categories[i].Selected"/>@Model.Categories[i].Text
                 }
             </div>
             <div class="form-group">
                 @for (int i = 0; i < Model.PostTags.Count; i++)
                 {
-                    <input type="hidden" asp-for="Categories[i].Value"/>
+                    <input type="hidden" asp-for="@Model.PostTags[i].Value"/>
                     <input asp-for="@Model.PostTags[i].Selected"/>@Model.PostTags[i].Text
                 }
             </div>

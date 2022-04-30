@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -28,7 +29,8 @@ namespace WebApplication.Controllers
         // GET: Posts
         public async Task<IActionResult> Index(int? pageNumber)
         {
-            var post = _context.Post.Include(x => x.Author);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var post = _context.Post.Include(x => x.Author).Where(x=> x.ApplicationUserId == userId);
             int pageSize = 3;
             return View(await PaginatedList<Post>.CreateAsync(post.AsNoTracking(), pageNumber ?? 1, pageSize));
         }

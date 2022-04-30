@@ -15,9 +15,7 @@ namespace WebApplication.ViewModels
         public List<SelectListItem> Categories { get; set; }
 
         public List<SelectListItem> PostTags { get; set; }
-
-
-
+        
         public DateTime PublishedDate { get; set; }
 
     }
